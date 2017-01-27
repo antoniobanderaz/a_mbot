@@ -23,7 +23,7 @@ def find_game_url(game):
            urllib.parse.quote_plus(game)
     resp = requests.get(url, headers={'User-Agent': _user_agent,
                                       'Referer': 'http://www.gamefaqs.com/'})
-    gamefaqs = BeautifulSoup(resp.text, 'lxml')
+    gamefaqs = BeautifulSoup(resp.text)
 
     tr_list = gamefaqs.find(class_='results').find_all('tr')
     
@@ -44,7 +44,7 @@ def get_stats(game_url):
         return
 
     resp = requests.get(game_url, headers={'User-Agent': _user_agent})
-    root = BeautifulSoup(resp.text, 'lxml')
+    root = BeautifulSoup(resp.text)
 
     rating_list = root.find_all(class_='rating')
 

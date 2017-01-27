@@ -1,10 +1,9 @@
 import re
 import abc
 
-import attr
-
 import config
 
+from executors.utils.requests import ExtractorRequest
 from executors import chat_methods, chat_questions
 
 CHAT_MSG = re.compile(r"^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)")
@@ -24,14 +23,6 @@ def execute(irc_message):
             return result
 
     print(irc_message)
-
-
-@attr.s
-class ExtractorRequest:
-    message = attr.ib()
-    username = attr.ib()
-    channel = attr.ib()
-    command = attr.ib()
 
 
 class CommandExtractor(abc.ABC):
@@ -75,8 +66,7 @@ class BotCommandExtr(CommandExtractor):
         print(' ' * 4 + req.username + ':', req.message)
         result = chat_methods.execute(req)
 
-        return 'PRIVMSG #{0} :@{1.username}, {1.message}'.format(req.channel,
-                                                                result)
+        return 'PRIVMSG #{} :{}'.format(req.channel, result)
 
 
 @command_extractor

@@ -22,7 +22,7 @@ def get_stats(game_url):
         return
 
     resp = requests.get(game_url, headers={'User-Agent': _user_agent})
-    root = BeautifulSoup(resp.text, 'lxml')
+    root = BeautifulSoup(resp.text)
 
     try:
         metacritic = root.find(class_='main_details').find('span').text.strip()

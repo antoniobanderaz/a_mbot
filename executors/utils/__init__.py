@@ -3,6 +3,7 @@ import random
 from . import twitch
 from . import gamefaqs
 from . import metacritic
+from . import tts
 
 random.seed(1475260362)
 

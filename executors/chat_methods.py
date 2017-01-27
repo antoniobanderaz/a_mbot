@@ -4,26 +4,24 @@ import re
 import ast
 import abc
 import collections
-import copy
+import itertools
 
+import attr
+import goslate
+import pymorphy2
+
+from .utils.requests import MethodRequest
 from executors.utils.result import Result
 from executors import utils
 
 random.seed()
 
+go = goslate.Goslate()
+morph = pymorphy2.MorphAnalyzer()
+
 KAPPA_SMILES = ['Kappa', 'Keepo', 'KappaRoss', 'KappaClaus', 'KappaWealth']
 
 execute = utils.MultiExecutor()
-
-
-class MethodRequest:
-    def __init__(self, req):
-        for attr_name, attr_val in req.__dict__.items():
-            setattr(self, attr_name, attr_val)
-        if not req.command:
-            self.method = ''
-            self.args = []
-        self.method, *self.args = utils.tokenize(self.command)
 
 
 class ChatMethod(abc.ABC):
@@ -48,9 +46,7 @@ class ChatMethod(abc.ABC):
         if req.args:
             *args_tail, args_last = req.args
             if args_last.startswith('(') and args_last.endswith(')'):
-                req_ = copy.copy(req)
-                req_.args = args_tail
-                match = self.match(req_)
+                match = self.match(attr.assoc(req, args=args_tail))
                 if match:
                     return Result(args_last[1:-1], req.username)
 
@@ -59,10 +55,14 @@ class ChatMethod(abc.ABC):
             return Result(username=req.username)
 
         result = self.exec(req)
-        return Result(str(result), req.username)
+        if isinstance(result, tuple):
+            message, username = result
+            return Result(str(message), str(username))
+        else:
+            return Result(str(result), req.username)
 
 
-def chat_method(args=0, alt_names=None):
+def chat_method(f=None, args=0, alt_names=None):
     if alt_names is None:
         alt_names = []
     else:
@@ -89,23 +89,30 @@ def chat_method(args=0, alt_names=None):
         return type(cls_name + 'Method', (ChatMethod,),
                     {'match': chat_method_match, 'exec': chat_method_exec})
 
-    return chat_method_dec
+    if f is None:
+        return chat_method_dec
+    else:
+        return chat_method_dec(f)
 
 
 def one_and_more_args(args_len):
     return args_len
 
 
+def timeout(username, time):
+    return utils.twitch.timeout(username, time), ''
+
+
 @execute.append_instance()
-@chat_method()
+@chat_method
 def time(req):
     return '{:%H:%M:%S}'.format(datetime.datetime.now())
 
 
 @execute.append_instance()
-@chat_method()
+@chat_method
 def banme(req):
-    return 'no Kappa'
+    return timeout(req.username, 10)
 
 
 @execute.append_instance()
@@ -129,13 +136,13 @@ def pick(req):
 @chat_method(args=one_and_more_args)
 def calc(req):
     try:
-        return ast.literal_eval(' '.join(req.args))
+        return ast.literal_eval(req.args_raw)
     except ValueError:
         return '{too complicated BibleThump }'
 
 
 @execute.append_instance()
-@chat_method()
+@chat_method
 def some_kappa(req):
     return random.choice(KAPPA_SMILES)
 
@@ -143,14 +150,14 @@ def some_kappa(req):
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
 def str_to_smile(req):
-    command = ' '.join(req.args)
+    command = req.args_raw  # where is method name??
     return utils.to_smile((':' + command, req.username, req.channel, command))
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
 def say(req):
-    return ' '.join(req.args)
+    return req.args_raw
 
 
 @execute.append_instance()
@@ -178,10 +185,10 @@ def game(req):
 
 
 @execute.append_instance()
-@chat_method(args=one_and_more_args)
+@chat_method(args=lambda args_len: args_len <= 1)
 def gamefaqs(req):
     if req.args:
-        game = ' '.join(req.args)
+        game = req.args_raw
     else:
         game = utils.twitch.curr_game(req.channel)
 
@@ -195,10 +202,10 @@ def gamefaqs(req):
 
 
 @execute.append_instance()
-@chat_method(args=one_and_more_args)
+@chat_method(args=lambda args_len: args_len <= 1)
 def metacritic(req):
     if req.args:
-        game = ' '.join(req.args)
+        game = req.args_raw
     else:
         game = utils.twitch.curr_game(req.channel)
 
@@ -210,3 +217,40 @@ def metacritic(req):
                'user score - {0.user_score}'.format(stats)
 
     return 'something went wrong ' + utils.to_smile(req.command)
+
+
+@execute.append_instance()
+@chat_method(args=1)
+def isinchat(req):
+    user_name = req.args[0]
+    chatters = utils.twitch.get_chatters(req.channel)
+    chatter_names = itertools.chain(*chatters.values())
+    if user_name in chatter_names:
+        return 'VoteYea'
+    else:
+        return 'VoteNay'
+
+
+@execute.append_instance()
+@chat_method(args=one_and_more_args, alt_names=['perevod', 'перевод', 'tr'])
+def translate(req):
+    return go.translate(req.args_raw, 'ru')
+
+
+@execute.append_instance()
+@chat_method(args=1, alt_names=['normal_form', 'normalize'])
+def normalized(req):
+    return morph.parse(req.args[0])[0].normal_form
+
+
+@execute.append_instance()
+@chat_method(args=1, alt_names=['разбор'])
+def opencorporatag(req):
+    return morph.parse(req.args[0])[0].tag.cyr_repr
+
+
+@execute.append_instance()
+@chat_method(args=one_and_more_args)
+def tts(req):
+    utils.tts.say(req.args_raw)
+    return 'done'

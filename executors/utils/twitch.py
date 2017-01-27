@@ -2,6 +2,7 @@ import requests
 import datetime
 
 import config
+from executors.utils.result import Result
 
 _twitch_api = 'https://api.twitch.tv/kraken/'
 
@@ -76,3 +77,23 @@ def get_chatters_count(channel_name):
     stream_object = get_chatters_object(channel_name)
     if stream_object:
         return stream_object['chatter_count']
+
+
+def _chat_command(command, *args):
+    return '.{} {}'.format(command, ' '.join([str(i) for i in args]))
+
+
+def timeout(username, time):
+    return _chat_command('timeout', username, time)
+
+
+def ban(username):
+    return _chat_command('ban', username)
+
+
+def me(message):
+    return _chat_command('me', message)
+
+
+def unban(username):
+    return _chat_command('unban', username)
