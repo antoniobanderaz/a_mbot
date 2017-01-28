@@ -2,8 +2,8 @@ import abc
 import re
 import requests
 
-from executors.utils.result import Result
-from executors import utils
+import utils
+from utils.result import Result
 
 execute = utils.MultiExecutor()
 

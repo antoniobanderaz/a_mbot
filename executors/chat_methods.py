@@ -10,8 +10,8 @@ import attr
 import goslate
 import pymorphy2
 
-from executors.utils.result import Result
-from executors import utils
+import utils
+from utils.result import Result
 
 random.seed()
 

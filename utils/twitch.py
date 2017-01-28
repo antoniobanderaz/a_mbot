@@ -2,7 +2,7 @@ import requests
 import datetime
 
 import config
-from executors.utils.result import Result
+from utils.result import Result
 
 _twitch_api = 'https://api.twitch.tv/kraken/'
 
