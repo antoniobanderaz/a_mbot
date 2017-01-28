@@ -23,7 +23,7 @@ def command_executor(f):
 def execute(irc_message):
     for exec_func in command_executors:
         try:
-            return exec_func(irc_message)
+            yield from exec_func(irc_message)
         except ExtractException:
             pass
 
@@ -42,7 +42,7 @@ def ping_exec(irc_message):
 
     channel = match.group(1)
     print(irc_message)
-    return 'PONG :' + channel
+    yield 'PONG :' + channel
 
 
 @command_executor
@@ -61,9 +61,9 @@ def common_exec(irc_message):
 
     extr = Extracted(text=text, username=username,
                      channel=channel, command=command)
-    result = chat_methods.execute(extr)
 
-    return 'PRIVMSG #{} :{}'.format(channel, result)
+    for result in chat_methods.execute(extr):
+        yield 'PRIVMSG #{} :{}'.format(channel, result)
 
 
 @command_executor
@@ -84,10 +84,10 @@ def inline_exec(irc_message):
 
     extr = Extracted(text=text, username=username,
                      channel=channel, command=command)
-    result = chat_methods.execute(extr)
-    result = CHAT_MSG_PATTERN.sub(result.message, text)
 
-    return 'PRIVMSG #{} :{}'.format(channel, result)
+    for result in chat_methods.execute(extr):
+        result = INLINE_CMD_PATTERN.sub(result.message, text)
+        yield 'PRIVMSG #{} :{}'.format(channel, result)
 
 
 @command_executor
@@ -108,8 +108,8 @@ def question_exec(irc_message):
 
     extr = Extracted(text=text, username=username,
                      channel=channel, command=command)
-    result = chat_questions.execute(extr)
 
-    return 'PRIVMSG #{} :@{}, {}'.format(channel,
-                                         result.username,
-                                         result.message)
+    for result in chat_questions.execute(extr):
+        yield 'PRIVMSG #{} :@{}, {}'.format(channel,
+                                            result.username,
+                                            result.message)

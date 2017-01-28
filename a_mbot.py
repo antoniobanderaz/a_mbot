@@ -19,7 +19,7 @@ chat_sock.send('CAP REQ :twitch.tv/membership', no_timeout=True)
 print('start receiving')
 
 for irc_message in chat_sock.get_irc_messages():
-    result = extractors.execute(irc_message)
-    if result:
-        print('-->', result)
-        chat_sock.send(result)
+    for result in extractors.execute(irc_message):
+        if result:
+            print('-->', result)
+            chat_sock.send(result)

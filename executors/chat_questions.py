@@ -19,11 +19,11 @@ class ChatQuestion(abc.ABC):
 
     def try_exec(self, req):
         if len(req.command) == 0:
-            return Result(username=req.username)
+            raise utils.ExecException
 
         match = self.match(req)
         if match:
-            return Result(self.exec(req, match), req.username)
+            return (Result(self.exec(req, match), req.username),)
 
 
 @execute.append_instance()

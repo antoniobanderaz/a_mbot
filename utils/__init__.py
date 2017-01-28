@@ -50,6 +50,10 @@ def tokenize(q):
         yield curr
 
 
+class ExecException(Exception):
+    pass
+
+
 class MultiExecutor:
     def __init__(self):
         self._executors = []
@@ -60,12 +64,15 @@ class MultiExecutor:
             return obj
         return append_instance_dec
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, req):
         for executor in self._executors:
-            result = executor.try_exec(*args, **kwargs)
+            try:
+                results = executor.try_exec(req)
+            except ExecException:
+                continue
 
-            if result.message:
-                return result
-
-        result.message = 'unknown command ' + to_smile(args)
-        return result
+            yield from results
+            break
+        else:
+            yield Result(message='unknown command ' + to_smile(args),
+                         username=req.username)

@@ -48,7 +48,7 @@ class ChatMethod(abc.ABC):
 
     def try_exec(self, req):
         if not req.command:
-            return Result(username=req.username)
+            raise utils.ExecException
 
         req = MethodRequest(req)
         
@@ -61,18 +61,18 @@ class ChatMethod(abc.ABC):
             if args_last.startswith('(') and args_last.endswith(')'):
                 match = self.match(attr.assoc(req, args=args_tail))
                 if match:
-                    return Result(args_last[1:-1], req.username)
+                    return (Result(args_last[1:-1], req.username),)
 
         match = self.match(req)
         if not match:
-            return Result(username=req.username)
+            raise utils.ExecException
 
         result = self.exec(req)
-        if isinstance(result, tuple):
-            message, username = result
-            return Result(str(message), str(username))
+        if isinstance(result, collections.abc.Sequence) \
+                                   and not isinstance(result, str):
+            return [Result(str(message), req.username) for message in result]
         else:
-            return Result(str(result), req.username)
+            return (Result(str(result), req.username),)
 
 
 def chat_method(f=None, args=0, alt_names=None):
