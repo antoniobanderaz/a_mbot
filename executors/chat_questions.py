@@ -22,8 +22,10 @@ class ChatQuestion(abc.ABC):
             raise utils.ExecException
 
         match = self.match(req)
-        if match:
-            return (Result(self.exec(req, match), req.username),)
+        if not match:
+            raise utils.ExecException
+
+        return (Result(self.exec(req, match), req.username),)
 
 
 @execute.append_instance()
