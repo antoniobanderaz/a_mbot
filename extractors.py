@@ -35,17 +35,6 @@ class ExtractException(Exception):
 
 
 @command_executor
-def ping_exec(irc_message):
-    match = re.search(r'^PING :(.+)$', irc_message)
-    if not match:
-        raise ExtractException
-
-    channel = match.group(1)
-    print(irc_message)
-    yield 'PONG :' + channel
-
-
-@command_executor
 def common_exec(irc_message):
     match = CHAT_MSG_PATTERN.search(irc_message)
     if not match:

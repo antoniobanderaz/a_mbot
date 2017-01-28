@@ -1,4 +1,5 @@
 import socket
+import re
 
 import config
 
@@ -16,10 +17,27 @@ chat_sock.send('JOIN #{}'.format(config.channel_name), no_timeout=True)
 chat_sock.send('CAP REQ :twitch.tv/membership', no_timeout=True)
 
 
+def ping_check(irc_message):
+    match = re.search(r'^PING :(.+)$', irc_message)
+    if not match:
+        return
+
+    irc_server = match.group(1)
+    print(irc_message)
+    return 'PONG :' + irc_server
+
 print('start receiving')
 
 for irc_message in chat_sock.get_irc_messages():
+    check = ping_check(irc_message)
+    if check:
+        print('-->', check)
+        chat_sock.send(check, no_timeout=True)
+        continue
+
     for result in extractors.execute(irc_message):
-        if result:
-            print('-->', result)
-            chat_sock.send(result)
+        if not result:
+            continue
+
+        print('-->', result)
+        chat_sock.send(result)
