@@ -4,6 +4,7 @@ from . import twitch
 from . import gamefaqs
 from . import metacritic
 from . import tts
+from utils.result import Result
 
 random.seed(1475260362)
 
@@ -74,5 +75,5 @@ class MultiExecutor:
             yield from results
             break
         else:
-            yield Result(message='unknown command ' + to_smile(args),
+            yield Result(message='unknown command ' + to_smile(req),
                          username=req.username)
