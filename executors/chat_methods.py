@@ -34,7 +34,9 @@ class MethodRequest:
         else:
             self.method, *self.args = utils.tokenize(extr_data.command)
 
-        self.args_raw = ' '.join(self.args)
+    @property
+    def args_raw(self):
+        return ' '.join(self.args)
 
 
 class ChatMethod(abc.ABC):
