@@ -1,122 +1,115 @@
 import re
 import abc
+import collections
 
 import config
 
-from executors.utils.requests import ExtractorRequest
 from executors import chat_methods, chat_questions
 
-CHAT_MSG = re.compile(r"^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)")
+CHAT_MSG_PATTERN = re.compile(r"^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)")
+INLINE_CMD_PATTERN = re.compile(r'#\{(.+)\}')
+QUESTION_PATTERN = re.compile(r'^@' + config.bot_name + r', (.+)$')
 
-command_extractors = []
+Extracted = collections.namedtuple('Extracted', 'text username channel command')
+
+command_executors = []
 
 
-def command_extractor(class_):
-    command_extractors.append(class_())
-    return class_
+def command_executor(f):
+    command_executors.append(f)
+    return f
 
 
 def execute(irc_message):
-    for extractor in command_extractors:
-        result = extractor.try_extract(irc_message)
-        if result:
-            return result
+    for exec_func in command_executors:
+        try:
+            return exec_func(irc_message)
+        except ExtractException:
+            pass
 
     print(irc_message)
 
 
-class CommandExtractor(abc.ABC):
-    @abc.abstractmethod
-    def match(self, irc_message):
-        pass
-
-    @abc.abstractmethod
-    def execute(self, irc_message, req):
-        pass
-
-    def try_extract(self, irc_message):
-        matched = self.match(irc_message)
-        if matched:
-            return self.execute(irc_message, matched)
+class ExtractException(Exception):
+    pass
 
 
-@command_extractor
-class PingExtr(CommandExtractor):
-    def match(self, irc_message):
-        match = re.search(r'^PING :(.+)$', irc_message)
-        if match:
-            return match.groups()
+@command_executor
+def ping_exec(irc_message):
+    match = re.search(r'^PING :(.+)$', irc_message)
+    if not match:
+        raise ExtractException
 
-    def execute(self, irc_message, req):
-        print(irc_message)
-        return 'PONG :' + req[0]
-
-
-@command_extractor
-class BotCommandExtr(CommandExtractor):
-    def match(self, irc_message):
-        match = CHAT_MSG.search(irc_message)
-        if match:
-            username, channel, message = match.groups()
-            if message[0] == ':':
-                return ExtractorRequest(message, username,
-                                        channel, message[1:])
-
-    def execute(self, irc_message, req):
-        print(' ' * 4 + req.username + ':', req.message)
-        result = chat_methods.execute(req)
-
-        return 'PRIVMSG #{} :{}'.format(req.channel, result)
+    channel = match.group(1)
+    print(irc_message)
+    return 'PONG :' + channel
 
 
-@command_extractor
-class InlineCommandExtr(CommandExtractor):
-    inline_command_pattern = re.compile(r'#\{(.+)\}')
+@command_executor
+def common_exec(irc_message):
+    match = CHAT_MSG_PATTERN.search(irc_message)
+    if not match:
+        raise ExtractException
 
-    def match(self, irc_message):
-        match_message = CHAT_MSG.search(irc_message)
-        if not match_message:
-            return
+    username, channel, text = match.groups()
+    if not text[0] == ':':
+        raise ExtractException
 
-        username, channel, message = match_message.groups()
+    command = text[1:]
 
-        match_inline = self.inline_command_pattern.search(message)
-        if not match_inline:
-            return
+    print(' ' * 4 + username + ':', text)
 
-        return ExtractorRequest(message, username,
-                                channel, match_inline.group(1))
+    extr = Extracted(text=text, username=username,
+                     channel=channel, command=command)
+    result = chat_methods.execute(extr)
 
-    def execute(self, irc_message, req):
-        print(' ' * 4 + req.username + ':', req.message)
-
-        result = chat_methods.execute(req)
-        result = self.inline_command_pattern.sub(result.message, req.message)
-
-        return 'PRIVMSG #{} :{}'.format(req.channel, result)
+    return 'PRIVMSG #{} :{}'.format(channel, result)
 
 
-@command_extractor
-class QuestionExtr(CommandExtractor):
-    question_pattern = re.compile(r'^@' + config.bot_name + r', (.+)$')
+@command_executor
+def inline_exec(irc_message):
+    match_message = CHAT_MSG_PATTERN.search(irc_message)
+    if not match_message:
+        raise ExtractException
 
-    def match(self, irc_message):
-        match_message = CHAT_MSG.search(irc_message)
-        if not match_message:
-            return
+    username, channel, text = match_message.groups()
 
-        username, channel, message = match_message.groups()
+    match_inline = INLINE_CMD_PATTERN.search(text)
+    if not match_inline:
+        raise ExtractException
 
-        match_question = self.question_pattern.search(message)
-        if not match_question:
-            return
+    command = match_inline.group(1)
 
-        return ExtractorRequest(message, username,
-                                channel, match_question.group(1))
+    print(' ' * 4 + username + ':', text)
 
-    def execute(self, irc_message, req):
-        print(' ' * 4 + req.username + ':', req.message)
-        req.command = re.sub('[^\w.]+', ' ', req.command).strip()
-        result = chat_questions.execute(req)
-        return 'PRIVMSG #{} :@{}, {}'.format(req.channel, result.username,
-                                             result.message)
+    extr = Extracted(text=text, username=username,
+                     channel=channel, command=command)
+    result = chat_methods.execute(extr)
+    result = CHAT_MSG_PATTERN.sub(result.message, text)
+
+    return 'PRIVMSG #{} :{}'.format(channel, result)
+
+
+@command_executor
+def question_exec(irc_message):
+    match_message = CHAT_MSG_PATTERN.search(irc_message)
+    if not match_message:
+        raise ExtractException
+
+    username, channel, text = match_message.groups()
+
+    match_question = QUESTION_PATTERN.search(text)
+    if not match_question:
+        raise ExtractException
+
+    command = re.sub('[^\w.]+', ' ', match_question.group(1)).strip()
+
+    print(' ' * 4 + username + ':', text)
+
+    extr = Extracted(text=text, username=username,
+                     channel=channel, command=command)
+    result = chat_questions.execute(extr)
+
+    return 'PRIVMSG #{} :@{}, {}'.format(channel,
+                                         result.username,
+                                         result.message)

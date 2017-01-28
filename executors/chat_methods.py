@@ -10,7 +10,6 @@ import attr
 import goslate
 import pymorphy2
 
-from .utils.requests import MethodRequest
 from executors.utils.result import Result
 from executors import utils
 
@@ -22,6 +21,20 @@ morph = pymorphy2.MorphAnalyzer()
 KAPPA_SMILES = ['Kappa', 'Keepo', 'KappaRoss', 'KappaClaus', 'KappaWealth']
 
 execute = utils.MultiExecutor()
+
+
+class MethodRequest:
+    def __init__(self, extr_data):
+        for attr, val in extr_data._asdict().items():
+            setattr(self, attr, val)
+
+        if not extr_data.command:
+            self.method = ''
+            self.args = []
+        else:
+            self.method, *self.args = utils.tokenize(extr_data.command)
+
+        self.args_raw = ' '.join(self.args)
 
 
 class ChatMethod(abc.ABC):
