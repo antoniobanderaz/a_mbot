@@ -24,10 +24,11 @@ def execute(irc_message):
     for exec_func in command_executors:
         try:
             yield from exec_func(irc_message)
+            break
         except ExtractException:
             pass
-
-    print(irc_message)
+    else:
+        print(irc_message)
 
 
 class ExtractException(Exception):
