@@ -73,6 +73,8 @@ class ChatMethod(abc.ABC):
             raise utils.ExecException
 
         result = self.exec(req)
+        if result is None:
+            return tuple()
         if isinstance(result, collections.abc.Sequence) \
                                    and not isinstance(result, str):
             return [Result(str(message), req.username) for message in result]
@@ -279,4 +281,3 @@ def opencorporatag(req):
 @chat_method(args=one_and_more_args)
 def tts(req):
     utils.tts.say(req.args_raw)
-    return 'done'
