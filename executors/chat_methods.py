@@ -61,9 +61,12 @@ class ChatMethod(abc.ABC):
         if req.args:
             *args_tail, args_last = req.args
             if args_last.startswith('(') and args_last.endswith(')'):
-                match = self.match(attr.assoc(req, args=args_tail))
-                if match:
-                    return (Result(args_last[1:-1], req.username),)
+                req.args = args_tail
+                match = self.match(req)
+                if not match:
+                    raise utils.ExecException
+
+                return (Result(args_last[1:-1], req.username),)
 
         match = self.match(req)
         if not match:
