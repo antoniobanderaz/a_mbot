@@ -123,6 +123,14 @@ def timeout(username, time):
 
 @execute.append_instance()
 @chat_method
+def list_(req):
+    return ', '.join('_'.join(re.findall('[A-Z][a-z]*',
+                              i.__class__.__name__[:-6])).lower()
+                     for i in execute._executors)
+
+
+@execute.append_instance()
+@chat_method
 def time(req):
     return '{:%H:%M:%S}'.format(datetime.datetime.now())
 
