@@ -1,16 +1,14 @@
-import attr
 
-
-@attr.s
 class Result:
-    message = attr.ib(default='', convert=str)
-    username = attr.ib(default=None)
+    def __init__(self, message='', username=None):
+        self._message = str(message)
+        self._username = username
 
     def __str__(self):
-        if self.username:
-            return '@{}, {}'.format(self.username, self.message)
+        if self._username:
+            return '@{}, {}'.format(self._username, self._message)
         else:
-            return self.message
+            return self._message
 
     def __bool__(self):
-        return bool(self.message and self.username)
+        return bool(self._message and self._username)
