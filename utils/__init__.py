@@ -65,10 +65,10 @@ class MultiExecutor:
             return obj
         return append_instance_dec
 
-    def __call__(self, req):
+    def __call__(self, req, writer):
         for executor in self._executors:
             try:
-                results = executor.try_exec(req)
+                results = executor.try_exec(req, writer)
             except ExecException:
                 continue
 

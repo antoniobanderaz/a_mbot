@@ -5,6 +5,7 @@ import ast
 import abc
 import collections
 import itertools
+import asyncio
 
 import attr
 import goslate
@@ -45,15 +46,15 @@ class ChatMethod(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def exec(self, req):
+    def exec(self, req, writer):
         pass
 
-    def try_exec(self, req):
+    def try_exec(self, req, writer):
         if not req.command:
             raise utils.ExecException
 
         req = MethodRequest(req)
-        
+
         for i, arg in enumerate(req.args):
             if arg.startswith('@'):
                 req.username = req.args.pop(i)[1:]
@@ -72,7 +73,7 @@ class ChatMethod(abc.ABC):
         if not match:
             raise utils.ExecException
 
-        result = self.exec(req)
+        result = self.exec(req, writer)
         if result is None:
             return tuple()
         if isinstance(result, collections.abc.Sequence) \
@@ -102,8 +103,8 @@ def chat_method(f=None, args=0, alt_names=None):
         def chat_method_match(self, req):
             return req.method in alt_names and args(len(req.args))
 
-        def chat_method_exec(self, req):
-            return f(req)
+        def chat_method_exec(self, req, writer):
+            return f(req, writer)
 
         cls_name = ''.join(i.title() for i in method_name.split('_'))
         return type(cls_name + 'Method', (ChatMethod,),
@@ -123,9 +124,17 @@ def timeout(username, time):
     return utils.twitch.timeout(username, time), ''
 
 
+def call_later(delay, coro):
+    async def timeout_coro(delay, coro):
+        await asyncio.sleep(delay)
+        await coro
+
+    asyncio.ensure_future(timeout_coro(delay, coro))
+
+
 @execute.append_instance()
 @chat_method
-def list_(req):
+def list_(req, writer):
     return ', '.join('_'.join(re.findall('[A-Z][a-z]*',
                               i.__class__.__name__[:-6])).lower()
                      for i in execute._executors)
@@ -133,19 +142,19 @@ def list_(req):
 
 @execute.append_instance()
 @chat_method
-def time(req):
+def time(req, writer):
     return '{:%H:%M:%S}'.format(datetime.datetime.now())
 
 
 @execute.append_instance()
 @chat_method
-def banme(req):
+def banme(req, writer):
     return timeout(req.username, 10)
 
 
 @execute.append_instance()
 @chat_method(args=2)
-def rand(req):
+def rand(req, writer):
     try:
         return random.randint(int(req.args[0]), int(req.args[1])) #  same seed
     except ValueError:
@@ -156,13 +165,13 @@ def rand(req):
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
-def pick(req):
+def pick(req, writer):
     return random.choice(req.args)
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
-def calc(req):
+def calc(req, writer):
     try:
         return ast.literal_eval(req.args_raw)
     except ValueError:
@@ -171,26 +180,26 @@ def calc(req):
 
 @execute.append_instance()
 @chat_method
-def some_kappa(req):
+def some_kappa(req, writer):
     return random.choice(KAPPA_SMILES)
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
-def str_to_smile(req):
+def str_to_smile(req, writer):
     command = req.args_raw  # where is method name??
     return utils.to_smile((':' + command, req.username, req.channel, command))
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
-def say(req):
+def say(req, writer):
     return req.args_raw
 
 
 @execute.append_instance()
 @chat_method(args=lambda args_len: args_len <= 1)
-def uptime(req):
+def uptime(req, writer):
     if req.args:
         req.channel = req.args[0]
     uptime = utils.twitch.uptime(req.channel)
@@ -202,7 +211,7 @@ def uptime(req):
 
 @execute.append_instance()
 @chat_method(args=lambda args_len: args_len <= 1)
-def game(req):
+def game(req, writer):
     if req.args:
         req.channel = req.args[0]
     game = utils.twitch.curr_game(req.channel)
@@ -214,7 +223,7 @@ def game(req):
 
 @execute.append_instance()
 @chat_method(args=lambda args_len: args_len <= 1)
-def gamefaqs(req):
+def gamefaqs(req, writer):
     if req.args:
         game = req.args_raw
     else:
@@ -231,7 +240,7 @@ def gamefaqs(req):
 
 @execute.append_instance()
 @chat_method(args=lambda args_len: args_len <= 1)
-def metacritic(req):
+def metacritic(req, writer):
     if req.args:
         game = req.args_raw
     else:
@@ -249,7 +258,7 @@ def metacritic(req):
 
 @execute.append_instance()
 @chat_method(args=1)
-def isinchat(req):
+def isinchat(req, writer):
     user_name = req.args[0]
     chatters = utils.twitch.get_chatters(req.channel)
     chatter_names = itertools.chain(*chatters.values())
@@ -261,29 +270,29 @@ def isinchat(req):
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args, alt_names=['perevod', 'перевод', 'tr'])
-def translate(req):
+def translate(req, writer):
     return go.translate(req.args_raw, 'ru')
 
 
 @execute.append_instance()
 @chat_method(args=1, alt_names=['normal_form', 'normalize'])
-def normalized(req):
+def normalized(req, writer):
     return morph.parse(req.args[0])[0].normal_form
 
 
 @execute.append_instance()
 @chat_method(args=1, alt_names=['разбор'])
-def opencorporatag(req):
+def opencorporatag(req, writer):
     return morph.parse(req.args[0])[0].tag.cyr_repr
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args, alt_names=['tts_ru'])
-def tts(req):
+def tts(req, writer):
     utils.tts.say(req.args_raw, lang='ru')
 
 
 @execute.append_instance()
 @chat_method(args=one_and_more_args)
-def tts_en(req):
+def tts_en(req, writer):
     utils.tts.say(req.args_raw, lang='en')

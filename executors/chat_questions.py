@@ -17,7 +17,7 @@ class ChatQuestion(abc.ABC):
     def exec(self, req, matched):
         pass
 
-    def try_exec(self, req):
+    def try_exec(self, req, writer):
         if len(req.command) == 0:
             raise utils.ExecException
 
