@@ -296,3 +296,28 @@ def tts(req, writer):
 @chat_method(args=one_and_more_args)
 def tts_en(req, writer):
     utils.tts.say(req.args_raw, lang='en')
+
+
+@execute.append_instance()
+@chat_method(args=one_and_more_args)
+def timer(req, writer):
+    try:
+        t = int(req.args[0])
+    except ValueError:
+        return 'time must be type of integer FailFish'
+
+    if len(req.args) > 1:
+        alarm_msg = ' '.join(req.args[1:])
+    else:
+        alarm_msg = None
+
+    async def alarm(req, writer, alarm_msg):
+        if alarm_msg:
+            alarm_msg = 'alarm: ' + alarm_msg
+        else:
+            alarm_msg = 'alarm'
+        await writer.write(req.channel, alarm_msg, username=req.username)
+
+    call_later(t, alarm(req, writer, alarm_msg))
+
+    return 'timer started (delay = ' + str(t) + ' secs)'
