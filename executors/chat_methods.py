@@ -98,8 +98,9 @@ def chat_method(f=None, args=0, alt_names=None):
         if not callable(args):
             _args = args
 
-            def args(args_len):
-                args_len == _args
+            def check_len(args_len):
+                return args_len == _args
+            args = check_len
 
         def chat_method_match(self, req):
             return req.method in alt_names and args(len(req.args))
