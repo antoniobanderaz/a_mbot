@@ -234,8 +234,8 @@ def gamefaqs(req, writer):
     stats = utils.gamefaqs.get_stats(utils.gamefaqs.find_game_url(game))
     print(stats)
     if stats:
-        return 'own - {0.own}, rate - {0.rate}, ' \
-               'diff - {0.diff}, play - {0.play}'.format(stats)
+        return f'own - {stats.own}, rate - {stats.rate}, ' \
+               f'diff - {stats.diff}, play - {stats.play}'
 
     return 'something went wrong ' + utils.to_smile(req.command)
 
@@ -252,8 +252,8 @@ def metacritic(req, writer):
     stats = utils.metacritic.get_stats(game_url)
     print(stats)
     if stats:
-        return 'metacritic - {0.metacritic}, ' \
-               'user score - {0.user_score}'.format(stats)
+        return f'metacritic - {stats.metacritic}, ' \
+               f'user score - {stats.user_score}'
 
     return 'something went wrong ' + utils.to_smile(req.command)
 
@@ -315,11 +315,11 @@ def timer(req, writer):
 
     async def alarm(req, writer, alarm_msg):
         if alarm_msg:
-            alarm_msg = 'alarm: ' + alarm_msg
+            alarm_msg = f'alarm: {alarm_msg}'
         else:
             alarm_msg = 'alarm'
         await writer.write(req.channel, alarm_msg, username=req.username)
 
     call_later(t, alarm(req, writer, alarm_msg))
 
-    return 'timer started (delay = ' + str(t) + ' secs)'
+    return f'timer started (delay = {t} secs)'

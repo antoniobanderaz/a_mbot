@@ -6,7 +6,7 @@ class Result:
 
     def __str__(self):
         if self._username:
-            return '@{}, {}'.format(self._username, self._message)
+            return f'@{self._username}, {self._message}'
         else:
             return self._message
 

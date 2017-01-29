@@ -37,13 +37,16 @@ class CurrencyQuestion(ChatQuestion):
             return match.groups()
 
     def exec(self, req, matched):
-        resp = requests.get('http://api.fixer.io/latest',
-                            params={'base': 'USD', 'symbols': 'RUB'})
+        try:
+            resp = requests.get('http://api.fixer.io/latest',
+                                params={'base': 'USD', 'symbols': 'RUB'})
+        except requests.exceptions.ConnectionError:
+            return 'server is not available' + utils.to_smile(req.command)
 
         if resp.ok:
             dollars = float(matched[0])
             сurrency = resp.json()['rates']['RUB']
             result = dollars * сurrency
-            return '{} долларов = {:.2f} рублей'.format(dollars, result)
+            return f'{dollars} долларов = {dollars * сurrency:.2f} рублей'
 
         return 'something went wrong ' + utils.to_smile(req.command)

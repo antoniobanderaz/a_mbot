@@ -14,7 +14,7 @@ def ping_check(irc_message):
 
     irc_server = match.group(1)
     print(irc_message)
-    return 'PONG :' + irc_server
+    return f'PONG :{irc_server}'
 
 
 class ChatSockWriter:
@@ -31,10 +31,9 @@ async def main(loop=None):
 
     chat_sock = chat.ChatSocket(reader, writer)
 
-    await chat_sock.send('PASS {}'.format(config.oauth_pass), no_timeout=True)
-    await chat_sock.send('NICK {}'.format(config.bot_name), no_timeout=True)
-    await chat_sock.send('JOIN #{}'.format(config.channel_name),
-                         no_timeout=True)
+    await chat_sock.send(f'PASS {config.oauth_pass}', no_timeout=True)
+    await chat_sock.send(f'NICK {config.bot_name}', no_timeout=True)
+    await chat_sock.send(f'JOIN #{config.channel_name}', no_timeout=True)
     await chat_sock.send('CAP REQ :twitch.tv/membership', no_timeout=True)
 
     sock_writer = ChatSockWriter(chat_sock)

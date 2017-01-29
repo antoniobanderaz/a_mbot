@@ -27,7 +27,7 @@ def _get_stream_url(channel_name):
 
 
 def _get_chatters_url(channel_name):
-    return 'http://tmi.twitch.tv/group/user/%s/chatters' % channel_name
+    return f'http://tmi.twitch.tv/group/user/{channel_name}/chatters'
 
 
 def get_stream_object(channel_name):

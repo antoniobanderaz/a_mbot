@@ -20,9 +20,9 @@ class ChatMethodWriter:
 
     async def write(self, channel, result, username=None):
         if username:
-            data = 'PRIVMSG #{} :@{}, {}'.format(channel, username, result)
+            data = f'PRIVMSG #{channel} :@{username}, {result}'
         else:
-            data = 'PRIVMSG #{} :{}'.format(channel, result)
+            data = f'PRIVMSG #{channel} :{result}'
 
         await self._sock_writer.write(data)
 
@@ -69,7 +69,7 @@ def common_exec(irc_message, writer):
                      channel=channel, command=command)
 
     for result in chat_methods.execute(extr, writer):
-        yield 'PRIVMSG #{} :{}'.format(channel, result)
+        yield f'PRIVMSG #{channel} :{result}'
 
 
 @command_executor
@@ -93,7 +93,7 @@ def inline_exec(irc_message, writer):
 
     for result in chat_methods.execute(extr, writer):
         result = INLINE_CMD_PATTERN.sub(result.message, text)
-        yield 'PRIVMSG #{} :{}'.format(channel, result)
+        yield f'PRIVMSG #{channel} :{result}'
 
 
 @command_executor
@@ -116,4 +116,4 @@ def question_exec(irc_message, writer):
                      channel=channel, command=command)
 
     for result in chat_questions.execute(extr, writer):
-        yield 'PRIVMSG #{} :{}'.format(channel, result)
+        yield f'PRIVMSG #{channel} :{result}'
