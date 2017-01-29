@@ -7,7 +7,6 @@ import collections
 import itertools
 import asyncio
 
-import attr
 import goslate
 import pymorphy2
 
@@ -77,7 +76,7 @@ class ChatMethod(abc.ABC):
         if result is None:
             return tuple()
         if isinstance(result, collections.abc.Sequence) \
-                                   and not isinstance(result, str):
+                and not isinstance(result, str):
             return [Result(str(message), req.username) for message in result]
         else:
             return (Result(str(result), req.username),)
@@ -98,7 +97,9 @@ def chat_method(f=None, args=0, alt_names=None):
 
         if not callable(args):
             _args = args
-            args = lambda args_len: args_len == _args
+
+            def args(args_len):
+                args_len == _args
 
         def chat_method_match(self, req):
             return req.method in alt_names and args(len(req.args))
@@ -156,7 +157,7 @@ def banme(req, writer):
 @chat_method(args=2)
 def rand(req, writer):
     try:
-        return random.randint(int(req.args[0]), int(req.args[1])) #  same seed
+        return random.randint(int(req.args[0]), int(req.args[1]))  # same seed
     except ValueError:
         pass
 

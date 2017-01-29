@@ -43,7 +43,7 @@ class CurrencyQuestion(ChatQuestion):
         if resp.ok:
             dollars = float(matched[0])
             сurrency = resp.json()['rates']['RUB']
-            return '{} долларов = {:.2f} рублей'.format(dollars,
-                                                        dollars * сurrency)
+            result = dollars * сurrency
+            return '{} долларов = {:.2f} рублей'.format(dollars, result)
 
         return 'something went wrong ' + utils.to_smile(req.command)

@@ -20,13 +20,13 @@ def find_game_url(game):
         return
 
     url = 'http://www.gamefaqs.com/search?game=' + \
-           urllib.parse.quote_plus(game)
+              urllib.parse.quote_plus(game)
     resp = requests.get(url, headers={'User-Agent': _user_agent,
                                       'Referer': 'http://www.gamefaqs.com/'})
     gamefaqs = BeautifulSoup(resp.text)
 
     tr_list = gamefaqs.find(class_='results').find_all('tr')
-    
+
     games = {}
     for tr in tr_list:
         platform = tr.find(class_='rmain').text.strip()

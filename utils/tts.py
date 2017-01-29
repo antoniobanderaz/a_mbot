@@ -8,6 +8,7 @@ import config
 
 cmd = config.ffplay_path + ' -nodisp -autoexit -'
 
+
 def say(text, *, lang='en'):
     tts = io.BytesIO()
     try:
@@ -17,6 +18,6 @@ def say(text, *, lang='en'):
             gTTS(text='не буду я такое читать', lang=lang).write_to_fp(tts)
         else:
             gTTS(text='I won\'t read it', lang='en').write_to_fp(tts)
-    
+
     p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
     p.communicate(input=tts.getvalue())
