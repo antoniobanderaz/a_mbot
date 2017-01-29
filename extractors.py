@@ -114,6 +114,4 @@ def question_exec(irc_message, writer):
                      channel=channel, command=command)
 
     for result in chat_questions.execute(extr, writer):
-        yield 'PRIVMSG #{} :@{}, {}'.format(channel,
-                                            result.username,
-                                            result.message)
+        yield 'PRIVMSG #{} :{}'.format(channel, result)
