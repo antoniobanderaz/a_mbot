@@ -7,9 +7,9 @@ import config
 
 cmd = config.ffplay_path + ' -nodisp -autoexit -'
 
-def say(text):
+def say(text, *, lang='en'):
     tts = io.BytesIO()
-    gTTS(text=text, lang='ru').write_to_fp(tts)
+    gTTS(text=text, lang=lang).write_to_fp(tts)
     
     p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
     p.communicate(input=tts.getvalue())

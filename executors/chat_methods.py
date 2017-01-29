@@ -278,6 +278,12 @@ def opencorporatag(req):
 
 
 @execute.append_instance()
-@chat_method(args=one_and_more_args)
+@chat_method(args=one_and_more_args, alt_names=['tts_ru'])
 def tts(req):
-    utils.tts.say(req.args_raw)
+    utils.tts.say(req.args_raw, lang='ru')
+
+
+@execute.append_instance()
+@chat_method(args=one_and_more_args)
+def tts_en(req):
+    utils.tts.say(req.args_raw, lang='en')
