@@ -4,7 +4,6 @@ from . import twitch
 from . import gamefaqs
 from . import metacritic
 from . import tts
-from utils.result import Result
 
 random.seed(1475260362)
 
@@ -53,6 +52,21 @@ def tokenize(q):
 
 class ExecException(Exception):
     pass
+
+
+class Result:
+    def __init__(self, message='', username=None):
+        self._message = str(message)
+        self._username = username
+
+    def __str__(self):
+        if self._username:
+            return f'@{self._username}, {self._message}'
+        else:
+            return self._message
+
+    def __bool__(self):
+        return bool(self._message and self._username)
 
 
 class MultiExecutor:

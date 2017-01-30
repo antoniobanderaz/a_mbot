@@ -11,7 +11,6 @@ import goslate
 import pymorphy2
 
 import utils
-from utils.result import Result
 
 random.seed()
 
@@ -66,7 +65,7 @@ class ChatMethod(abc.ABC):
                 if not match:
                     raise utils.ExecException
 
-                return (Result(args_last[1:-1], req.username),)
+                return (utils.Result(args_last[1:-1], req.username),)
 
         match = self.match(req)
         if not match:
@@ -77,9 +76,9 @@ class ChatMethod(abc.ABC):
             return tuple()
         if isinstance(result, collections.abc.Sequence) \
                 and not isinstance(result, str):
-            return [Result(str(message), req.username) for message in result]
+            return [utils.Result(str(message), req.username) for message in result]
         else:
-            return (Result(str(result), req.username),)
+            return (utils.Result(str(result), req.username),)
 
 
 def chat_method(f=None, args=0, alt_names=None):

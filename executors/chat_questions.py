@@ -3,7 +3,6 @@ import re
 import requests
 
 import utils
-from utils.result import Result
 
 execute = utils.MultiExecutor()
 
@@ -25,7 +24,7 @@ class ChatQuestion(abc.ABC):
         if not match:
             raise utils.ExecException
 
-        return (Result(self.exec(req, match), req.username),)
+        return (utils.Result(self.exec(req, match), req.username),)
 
 
 @execute.append_instance()
@@ -46,7 +45,6 @@ class CurrencyQuestion(ChatQuestion):
         if resp.ok:
             dollars = float(matched[0])
             сurrency = resp.json()['rates']['RUB']
-            result = dollars * сurrency
             return f'{dollars} долларов = {dollars * сurrency:.2f} рублей'
 
         return 'something went wrong ' + utils.to_smile(req.command)
