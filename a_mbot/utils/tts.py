@@ -4,7 +4,7 @@ import io
 from gtts import gTTS
 from requests.exceptions import HTTPError
 
-import config
+from a_mbot import config
 
 cmd = config.ffplay_path + ' -nodisp -autoexit -'
 

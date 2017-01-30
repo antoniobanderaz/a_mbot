@@ -1,7 +1,7 @@
 import datetime
 import asyncio
 
-import config
+from . import config
 
 SEND_TIMEOUT = 1 / config.RATE
 
@@ -24,7 +24,7 @@ class ChatSocket:
         else:
             pause = self._t * SEND_TIMEOUT - diff
             if pause > 0:
-                await asyncio.sleep(pause)
+                await asyncio.sleep(pause, loop=self._loop)
                 curr_send_time += pause
             self._t = 1
 

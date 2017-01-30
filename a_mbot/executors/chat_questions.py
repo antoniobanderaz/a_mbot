@@ -2,7 +2,7 @@ import abc
 import re
 import requests
 
-import utils
+from a_mbot import utils
 
 execute = utils.MultiExecutor()
 

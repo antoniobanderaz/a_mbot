@@ -1,10 +1,10 @@
 import re
 import asyncio
 
-import config
+from . import config
 
-import chat
-import extractors
+from . import chat
+from . import extractors
 
 
 def ping_check(irc_message):
@@ -29,7 +29,7 @@ async def main(loop=None):
     reader, writer = await asyncio.open_connection(host=config.HOST,
                                                    port=config.PORT, loop=loop)
 
-    chat_sock = chat.ChatSocket(reader, writer)
+    chat_sock = chat.ChatSocket(reader, writer, loop=loop)
 
     await chat_sock.send(f'PASS {config.oauth_pass}', no_timeout=True)
     await chat_sock.send(f'NICK {config.bot_name}', no_timeout=True)
@@ -53,6 +53,11 @@ async def main(loop=None):
             print('-->', result)
             await chat_sock.send(result)
 
-if __name__ == '__main__':
+
+def start_loop():
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    loop.run_until_complete(main(loop=loop))
+
+
+if __name__ == '__main__':
+    start_loop()

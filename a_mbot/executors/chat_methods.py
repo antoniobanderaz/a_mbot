@@ -10,7 +10,7 @@ import asyncio
 import goslate
 import pymorphy2
 
-import utils
+from a_mbot import utils
 
 random.seed()
 

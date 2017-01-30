@@ -1,7 +1,7 @@
 import requests
 import datetime
 
-import config
+from a_mbot import config
 
 _twitch_api = 'https://api.twitch.tv/kraken/'
 

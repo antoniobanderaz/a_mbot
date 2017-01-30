@@ -1,9 +1,9 @@
 import re
 import collections
 
-import config
+from . import config
 
-from executors import chat_methods, chat_questions
+from .executors import chat_methods, chat_questions
 
 msg_pattern = r'^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)'
 CHAT_MSG_PATTERN = re.compile(msg_pattern)
