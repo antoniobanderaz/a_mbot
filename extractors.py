@@ -5,10 +5,10 @@ import config
 
 from executors import chat_methods, chat_questions
 
-msg_pattern = r"^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)"
+msg_pattern = r'^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #(\w+) :(.+)'
 CHAT_MSG_PATTERN = re.compile(msg_pattern)
 INLINE_CMD_PATTERN = re.compile(r'#\{(.+)\}')
-QUESTION_PATTERN = re.compile(r'^@' + config.bot_name + r', (.+)$')
+QUESTION_PATTERN = re.compile(f'^@{config.bot_name}, (.+)$')
 
 Extracted = collections.namedtuple('Extracted',
                                    'text username channel command')
